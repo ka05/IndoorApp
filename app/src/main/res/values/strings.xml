@@ -1,0 +1,11 @@
+<resources>
+
+    <string name="app_name">MyFirstIndoorsApp</string>
+    <string name="hello_world">Wait for position</string>
+    <string name="menu_settings">Settings</string>
+    <string name="title_activity_main">MainActivity</string>
+    <string name="no_zones">No Zones found!</string>
+    <string name="cancel">Cancel</string>
+
+
+</resources>

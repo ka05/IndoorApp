@@ -1,0 +1,239 @@
+ECLIPSE ANDROID PROJECT IMPORT SUMMARY
+======================================
+
+Ignored Files:
+--------------
+The following files were *not* copied into the new Gradle project; you
+should evaluate whether these are still needed in your project and if
+so manually move them:
+
+* .astylerc
+* .idea/
+* .idea/.name
+* .idea/MyFirstIndoorsAppAndroid.iml
+* .idea/compiler.xml
+* .idea/copyright/
+* .idea/copyright/profiles_settings.xml
+* .idea/misc.xml
+* .idea/modules.xml
+* .idea/vcs.xml
+* .idea/workspace.xml
+* indoors_doc/
+* indoors_doc/allclasses-frame.html
+* indoors_doc/allclasses-noframe.html
+* indoors_doc/com/
+* indoors_doc/com/customlbs/
+* indoors_doc/com/customlbs/coordinates/
+* indoors_doc/com/customlbs/coordinates/GeoCoordinate.html
+* indoors_doc/com/customlbs/coordinates/class-use/
+* indoors_doc/com/customlbs/coordinates/class-use/GeoCoordinate.html
+* indoors_doc/com/customlbs/coordinates/package-frame.html
+* indoors_doc/com/customlbs/coordinates/package-summary.html
+* indoors_doc/com/customlbs/coordinates/package-tree.html
+* indoors_doc/com/customlbs/coordinates/package-use.html
+* indoors_doc/com/customlbs/library/
+* indoors_doc/com/customlbs/library/DebugSettings.html
+* indoors_doc/com/customlbs/library/ErrorCode.html
+* indoors_doc/com/customlbs/library/EvaluationParameters.html
+* indoors_doc/com/customlbs/library/Indoors.html
+* indoors_doc/com/customlbs/library/IndoorsError.html
+* indoors_doc/com/customlbs/library/IndoorsException.html
+* indoors_doc/com/customlbs/library/IndoorsFactory.Builder.html
+* indoors_doc/com/customlbs/library/IndoorsFactory.html
+* indoors_doc/com/customlbs/library/IndoorsLocationAdapter.html
+* indoors_doc/com/customlbs/library/IndoorsLocationListener.html
+* indoors_doc/com/customlbs/library/IndoorsServiceCallbackImpl.html
+* indoors_doc/com/customlbs/library/LocalizationParameters.html
+* indoors_doc/com/customlbs/library/TileRequester.TileRequestCallback.html
+* indoors_doc/com/customlbs/library/TileRequester.html
+* indoors_doc/com/customlbs/library/callbacks/
+* indoors_doc/com/customlbs/library/callbacks/DebugInfoCallback.html
+* indoors_doc/com/customlbs/library/callbacks/ImportedBuildingCallback.html
+* indoors_doc/com/customlbs/library/callbacks/IndoorsServiceCallback.html
+* indoors_doc/com/customlbs/library/callbacks/LoadingBuildingCallback.html
+* indoors_doc/com/customlbs/library/callbacks/OnlineBuildingCallback.html
+* indoors_doc/com/customlbs/library/callbacks/RoutingCallback.html
+* indoors_doc/com/customlbs/library/callbacks/ZoneCallback.html
+* indoors_doc/com/customlbs/library/callbacks/class-use/
+* indoors_doc/com/customlbs/library/callbacks/class-use/DebugInfoCallback.html
+* indoors_doc/com/customlbs/library/callbacks/class-use/ImportedBuildingCallback.html
+* indoors_doc/com/customlbs/library/callbacks/class-use/IndoorsServiceCallback.html
+* indoors_doc/com/customlbs/library/callbacks/class-use/LoadingBuildingCallback.html
+* indoors_doc/com/customlbs/library/callbacks/class-use/OnlineBuildingCallback.html
+* indoors_doc/com/customlbs/library/callbacks/class-use/RoutingCallback.html
+* indoors_doc/com/customlbs/library/callbacks/class-use/ZoneCallback.html
+* indoors_doc/com/customlbs/library/callbacks/package-frame.html
+* indoors_doc/com/customlbs/library/callbacks/package-summary.html
+* indoors_doc/com/customlbs/library/callbacks/package-tree.html
+* indoors_doc/com/customlbs/library/callbacks/package-use.html
+* indoors_doc/com/customlbs/library/class-use/
+* indoors_doc/com/customlbs/library/class-use/DebugSettings.html
+* indoors_doc/com/customlbs/library/class-use/ErrorCode.html
+* indoors_doc/com/customlbs/library/class-use/EvaluationParameters.html
+* indoors_doc/com/customlbs/library/class-use/Indoors.html
+* indoors_doc/com/customlbs/library/class-use/IndoorsError.html
+* indoors_doc/com/customlbs/library/class-use/IndoorsException.html
+* indoors_doc/com/customlbs/library/class-use/IndoorsFactory.Builder.html
+* indoors_doc/com/customlbs/library/class-use/IndoorsFactory.html
+* indoors_doc/com/customlbs/library/class-use/IndoorsLocationAdapter.html
+* indoors_doc/com/customlbs/library/class-use/IndoorsLocationListener.html
+* indoors_doc/com/customlbs/library/class-use/IndoorsServiceCallbackImpl.html
+* indoors_doc/com/customlbs/library/class-use/LocalizationParameters.html
+* indoors_doc/com/customlbs/library/class-use/TileRequester.TileRequestCallback.html
+* indoors_doc/com/customlbs/library/class-use/TileRequester.html
+* indoors_doc/com/customlbs/library/model/
+* indoors_doc/com/customlbs/library/model/Building.html
+* indoors_doc/com/customlbs/library/model/DebugInfo.html
+* indoors_doc/com/customlbs/library/model/Floor.html
+* indoors_doc/com/customlbs/library/model/Map.html
+* indoors_doc/com/customlbs/library/model/TileKey.html
+* indoors_doc/com/customlbs/library/model/Tiles.html
+* indoors_doc/com/customlbs/library/model/Zone.html
+* indoors_doc/com/customlbs/library/model/class-use/
+* indoors_doc/com/customlbs/library/model/class-use/Building.html
+* indoors_doc/com/customlbs/library/model/class-use/DebugInfo.html
+* indoors_doc/com/customlbs/library/model/class-use/Floor.html
+* indoors_doc/com/customlbs/library/model/class-use/Map.html
+* indoors_doc/com/customlbs/library/model/class-use/TileKey.html
+* indoors_doc/com/customlbs/library/model/class-use/Tiles.html
+* indoors_doc/com/customlbs/library/model/class-use/Zone.html
+* indoors_doc/com/customlbs/library/model/package-frame.html
+* indoors_doc/com/customlbs/library/model/package-summary.html
+* indoors_doc/com/customlbs/library/model/package-tree.html
+* indoors_doc/com/customlbs/library/model/package-use.html
+* indoors_doc/com/customlbs/library/package-frame.html
+* indoors_doc/com/customlbs/library/package-summary.html
+* indoors_doc/com/customlbs/library/package-tree.html
+* indoors_doc/com/customlbs/library/package-use.html
+* indoors_doc/com/customlbs/library/util/
+* indoors_doc/com/customlbs/library/util/UnitConverter.html
+* indoors_doc/com/customlbs/library/util/class-use/
+* indoors_doc/com/customlbs/library/util/class-use/UnitConverter.html
+* indoors_doc/com/customlbs/library/util/package-frame.html
+* indoors_doc/com/customlbs/library/util/package-summary.html
+* indoors_doc/com/customlbs/library/util/package-tree.html
+* indoors_doc/com/customlbs/library/util/package-use.html
+* indoors_doc/com/customlbs/shared/
+* indoors_doc/com/customlbs/shared/Coordinate.html
+* indoors_doc/com/customlbs/shared/class-use/
+* indoors_doc/com/customlbs/shared/class-use/Coordinate.html
+* indoors_doc/com/customlbs/shared/geo/
+* indoors_doc/com/customlbs/shared/geo/GeoCoordinateUtil.html
+* indoors_doc/com/customlbs/shared/geo/class-use/
+* indoors_doc/com/customlbs/shared/geo/class-use/GeoCoordinateUtil.html
+* indoors_doc/com/customlbs/shared/geo/package-frame.html
+* indoors_doc/com/customlbs/shared/geo/package-summary.html
+* indoors_doc/com/customlbs/shared/geo/package-tree.html
+* indoors_doc/com/customlbs/shared/geo/package-use.html
+* indoors_doc/com/customlbs/shared/package-frame.html
+* indoors_doc/com/customlbs/shared/package-summary.html
+* indoors_doc/com/customlbs/shared/package-tree.html
+* indoors_doc/com/customlbs/shared/package-use.html
+* indoors_doc/com/customlbs/surface/
+* indoors_doc/com/customlbs/surface/library/
+* indoors_doc/com/customlbs/surface/library/DefaultSurfacePainterConfiguration.html
+* indoors_doc/com/customlbs/surface/library/IndoorsSurface.OnSurfaceClickListener.html
+* indoors_doc/com/customlbs/surface/library/IndoorsSurface.OnSurfaceLongClickListener.html
+* indoors_doc/com/customlbs/surface/library/IndoorsSurface.html
+* indoors_doc/com/customlbs/surface/library/IndoorsSurfaceFactory.Builder.html
+* indoors_doc/com/customlbs/surface/library/IndoorsSurfaceFactory.html
+* indoors_doc/com/customlbs/surface/library/IndoorsSurfaceFragment.html
+* indoors_doc/com/customlbs/surface/library/SurfacePainterConfiguration.PaintConfiguration.html
+* indoors_doc/com/customlbs/surface/library/SurfacePainterConfiguration.html
+* indoors_doc/com/customlbs/surface/library/SurfaceState.FloorChangeListener.html
+* indoors_doc/com/customlbs/surface/library/SurfaceState.MapPositionListener.html
+* indoors_doc/com/customlbs/surface/library/SurfaceState.html
+* indoors_doc/com/customlbs/surface/library/UserInteractionListenerImpl.html
+* indoors_doc/com/customlbs/surface/library/ViewMode.html
+* indoors_doc/com/customlbs/surface/library/class-use/
+* indoors_doc/com/customlbs/surface/library/class-use/DefaultSurfacePainterConfiguration.html
+* indoors_doc/com/customlbs/surface/library/class-use/IndoorsSurface.OnSurfaceClickListener.html
+* indoors_doc/com/customlbs/surface/library/class-use/IndoorsSurface.OnSurfaceLongClickListener.html
+* indoors_doc/com/customlbs/surface/library/class-use/IndoorsSurface.html
+* indoors_doc/com/customlbs/surface/library/class-use/IndoorsSurfaceFactory.Builder.html
+* indoors_doc/com/customlbs/surface/library/class-use/IndoorsSurfaceFactory.html
+* indoors_doc/com/customlbs/surface/library/class-use/IndoorsSurfaceFragment.html
+* indoors_doc/com/customlbs/surface/library/class-use/SurfacePainterConfiguration.PaintConfiguration.html
+* indoors_doc/com/customlbs/surface/library/class-use/SurfacePainterConfiguration.html
+* indoors_doc/com/customlbs/surface/library/class-use/SurfaceState.FloorChangeListener.html
+* indoors_doc/com/customlbs/surface/library/class-use/SurfaceState.MapPositionListener.html
+* indoors_doc/com/customlbs/surface/library/class-use/SurfaceState.html
+* indoors_doc/com/customlbs/surface/library/class-use/UserInteractionListenerImpl.html
+* indoors_doc/com/customlbs/surface/library/class-use/ViewMode.html
+* indoors_doc/com/customlbs/surface/library/package-frame.html
+* indoors_doc/com/customlbs/surface/library/package-summary.html
+* indoors_doc/com/customlbs/surface/library/package-tree.html
+* indoors_doc/com/customlbs/surface/library/package-use.html
+* indoors_doc/constant-values.html
+* indoors_doc/deprecated-list.html
+* indoors_doc/help-doc.html
+* indoors_doc/index-files/
+* indoors_doc/index-files/index-1.html
+* indoors_doc/index-files/index-10.html
+* indoors_doc/index-files/index-11.html
+* indoors_doc/index-files/index-12.html
+* indoors_doc/index-files/index-13.html
+* indoors_doc/index-files/index-14.html
+* indoors_doc/index-files/index-15.html
+* indoors_doc/index-files/index-16.html
+* indoors_doc/index-files/index-17.html
+* indoors_doc/index-files/index-18.html
+* indoors_doc/index-files/index-19.html
+* indoors_doc/index-files/index-2.html
+* indoors_doc/index-files/index-20.html
+* indoors_doc/index-files/index-21.html
+* indoors_doc/index-files/index-22.html
+* indoors_doc/index-files/index-23.html
+* indoors_doc/index-files/index-3.html
+* indoors_doc/index-files/index-4.html
+* indoors_doc/index-files/index-5.html
+* indoors_doc/index-files/index-6.html
+* indoors_doc/index-files/index-7.html
+* indoors_doc/index-files/index-8.html
+* indoors_doc/index-files/index-9.html
+* indoors_doc/index.html
+* indoors_doc/overview-frame.html
+* indoors_doc/overview-summary.html
+* indoors_doc/overview-tree.html
+* indoors_doc/overview.png
+* indoors_doc/package-list
+* indoors_doc/resources/
+* indoors_doc/resources/background.gif
+* indoors_doc/resources/head_bar_bg.png
+* indoors_doc/resources/logo_small.png
+* indoors_doc/resources/sub_header.jpg
+* indoors_doc/resources/tab.gif
+* indoors_doc/resources/titlebar.gif
+* indoors_doc/resources/titlebar_end.gif
+* indoors_doc/serialized-form.html
+* indoors_doc/stylesheet.css
+
+Moved Files:
+------------
+Android Gradle projects use a different directory structure than ADT
+Eclipse projects. Here's how the projects were restructured:
+
+* AndroidManifest.xml => app/src/main/AndroidManifest.xml
+* libs/android-support-v4-r13.jar => app/libs/android-support-v4-r13.jar
+* libs/armeabi-v7a/libIndoorsLocator.so => app/src/main/jniLibs/armeabi-v7a/libIndoorsLocator.so
+* libs/armeabi/libIndoorsLocator.so => app/src/main/jniLibs/armeabi/libIndoorsLocator.so
+* libs/indoors-library-surface.jar => app/libs/indoors-library-surface.jar
+* libs/x86/libIndoorsLocator.so => app/src/main/jniLibs/x86/libIndoorsLocator.so
+* lint.xml => app/lint.xml
+* res/ => app/src/main/res/
+* src/ => app/src/main/java/
+
+Next Steps:
+-----------
+You can now build the project. The Gradle project needs network
+connectivity to download dependencies.
+
+Bugs:
+-----
+If for some reason your project does not build, and you determine that
+it is due to a bug or limitation of the Eclipse to Gradle importer,
+please file a bug at http://b.android.com with category
+Component-Tools.
+
+(This import summary is for your information only, and can be deleted
+after import once you are satisfied with the results.)

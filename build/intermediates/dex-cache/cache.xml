@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<items version="2" >
+
+    <item
+        jar="/Users/claytonherendeen/Documents/Projects/Android/IndoorApp/app/libs/android-support-v4-r13.jar"
+        jumboMode="false"
+        revision="22.0.1"
+        sha1="bd6479f5dd592790607e0504e66e0f31c2b4d308">
+        <dex dex="/Users/claytonherendeen/Documents/Projects/Android/IndoorApp/app/build/intermediates/pre-dexed/debug/android-support-v4-r13-16893ae99a43a99811c483d521ee78ef0562b3d7.jar" />
+    </item>
+    <item
+        jar="/Users/claytonherendeen/Documents/Projects/Android/IndoorApp/app/libs/indoors-library-surface.jar"
+        jumboMode="false"
+        revision="22.0.1"
+        sha1="e618ea4c02de46535af5cd7b3ceb61006935e812">
+        <dex dex="/Users/claytonherendeen/Documents/Projects/Android/IndoorApp/app/build/intermediates/pre-dexed/debug/indoors-library-surface-a8fd6c4391c313acf9c15094dc09a21abe163537.jar" />
+    </item>
+
+</items>

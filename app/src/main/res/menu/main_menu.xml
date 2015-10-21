@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:id="@+id/route_search"
+        android:icon="@drawable/ic_route"
+        android:showAsAction="always"
+        android:title="Search routes"/>
+
+    <item
+        android:id="@+id/menu_search_invoke"
+        android:icon="@drawable/ic_action_search"
+        android:showAsAction="always"
+        android:title="Search zones"/>
+
+    <item
+        android:id="@+id/menu_show_all_zones"
+        android:checkable="true"
+        android:checked="@bool/default_show_all_zones"
+        android:title="Show all zones"/>
+
+
+
+</menu>

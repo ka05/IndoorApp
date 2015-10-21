@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="indoors-library-surface">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/app/libs/indoors-library-surface.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
