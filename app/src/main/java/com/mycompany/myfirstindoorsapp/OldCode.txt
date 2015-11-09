@@ -1,0 +1,86 @@
+    // OLD AND UNUSED
+	public void calculateRoute(String start, String end) {
+
+		int startX = 0;
+		int startY = 0;
+		int endX = 0;
+		int endY = 0;
+		indoorsFragment.updateSurface();
+		System.out.println("start name:" + start);
+		System.out.println("end name:" + end);
+
+		for (Zone zone : indoorsFragment.getZones()) {
+			System.out.println("Zone Name:" + zone.getName());
+
+			ar.add(zone.getName());
+			System.out.println("vvvv:" + ar);
+
+				if (zone.getName().equals(start)) {
+				for (Coordinate c : zone.getZonePoints()) {
+					System.out.println("one");
+					System.out.println("source-x:"+c.x);
+					System.out.println("source-y:"+c.y);
+					startX += c.x;
+					startY += c.y;
+				}
+					startX /= zone.getZonePoints().size();
+					startY /= zone.getZonePoints().size();
+					//System.out.println("startX:"+startX);
+					//System.out.println("startY:"+startY);
+				}
+				else if (zone.getName().equals(end)) {
+				for (Coordinate c : zone.getZonePoints()) {
+					System.out.println("two");
+					System.out.println("end-x:"+c.x);
+					System.out.println("end-y:"+c.y);
+					endX += c.x;
+					endY += c.y;
+				}
+					endX /= zone.getZonePoints().size();
+					endY /= zone.getZonePoints().size();
+					//System.out.println("endX:" + endX);
+					//System.out.println("endY:"+endY);
+				}
+				else {
+					Toast.makeText(this, "No Zones found!", Toast.LENGTH_SHORT)
+							.show();
+					startX = 0;
+					startY = 0;
+					endX = 0;
+					endY = 0;
+					//System.exit(0);
+				}
+
+			//System.out.println("X:"+(startX-endX));
+			//System.out.println("Y:"+(startY-endY));
+			//Coordinate start1 = new Coordinate(startX, startY, 3);
+			//Coordinate end1 = new Coordinate(endX, endY, 3);
+			System.out.println("startX:"+startX);
+			System.out.println("startY:"+startY);
+
+			System.out.println("endX:" + endX);
+			System.out.println("endY:" + endY);
+			if((startX == 0) || (startY == 0) || (endX == 0) || (endY == 0) ){
+				 start1 = new Coordinate(0, 0, 3);
+				 end1 = new Coordinate(0, 0, 3);
+			}
+			else{
+				 start1 = new Coordinate(startX, startY, 3);
+				 end1 = new Coordinate(endX, endY, 3);
+			}
+			indoorsFragment.getIndoors().getRouteAToB(start1, end1, new RoutingCallback() {
+				@Override
+				public void onError(IndoorsException arg0) {
+					// TODO Auto-generated method stub
+				}
+
+				@Override
+				public void setRoute(ArrayList<Coordinate> arg0) {
+					indoorsFragment.getSurfaceState().setRoutingPath(arg0, true);
+					indoorsFragment.updateSurface();
+				}
+			});
+
+		}
+
+	}

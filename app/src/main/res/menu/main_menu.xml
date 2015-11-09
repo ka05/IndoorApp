@@ -12,6 +12,11 @@
         android:icon="@drawable/ic_action_search"
         android:showAsAction="always"
         android:title="Search zones"/>
+    <item
+        android:id="@+id/menu_speech_invoke"
+        android:icon="@drawable/mic"
+        android:showAsAction="always"
+        android:title="Speech to Route"/>
 
     <item
         android:id="@+id/menu_show_all_zones"

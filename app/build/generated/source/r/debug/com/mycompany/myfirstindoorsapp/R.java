@@ -34,10 +34,12 @@ public final class R {
         public static final int ic_action_search=0x7f020001;
         public static final int ic_launcher=0x7f020002;
         public static final int ic_route=0x7f020003;
+        public static final int mic=0x7f020004;
     }
     public static final class id {
         public static final int menu_search_invoke=0x7f09000b;
-        public static final int menu_show_all_zones=0x7f09000c;
+        public static final int menu_show_all_zones=0x7f09000d;
+        public static final int menu_speech_invoke=0x7f09000c;
         public static final int route_cancel=0x7f090007;
         public static final int route_endButton=0x7f090005;
         public static final int route_endContainer=0x7f090003;

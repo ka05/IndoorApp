@@ -2,15 +2,20 @@ package com.mycompany.myfirstindoorsapp;
 
 import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+import java.util.Locale;
 
 import android.app.Dialog;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Color;
 import android.os.Bundle;
+import android.os.RemoteException;
 import android.speech.RecognizerIntent;
+import android.speech.tts.TextToSpeech;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentTransaction;
 import android.util.Log;
@@ -19,6 +24,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.TableLayout;
 import android.widget.TableRow;
 import android.widget.TextView;
@@ -41,10 +47,14 @@ import com.customlbs.surface.library.IndoorsSurfaceFragment;
 import com.customlbs.surface.library.SurfacePainterConfiguration;
 import com.customlbs.surface.library.SurfaceState;
 import com.customlbs.surface.library.ViewMode;
-//import android.view.View.OnClickListener;
 
-
-//import com.example.android.actionbarcompat.ActionBarActivity;
+// beacon handling
+//import org.altbeacon.beacon.Beacon;
+//import org.altbeacon.beacon.BeaconConsumer;
+//import org.altbeacon.beacon.BeaconManager;
+//import org.altbeacon.beacon.BeaconParser;
+//import org.altbeacon.beacon.RangeNotifier;
+//import org.altbeacon.beacon.Region;
 
 /**
  * Sample Android project, powered by indoo.rs :)
@@ -55,35 +65,54 @@ import com.customlbs.surface.library.ViewMode;
 
 // May want to redisgn using Material design
 // http://alexzh.com/tutorials/material-style-for-dialogs-in-android-application/
+// https://my.indoo.rs/javadoc/mmt_guide/#MeasurePoints
+// JAVADOC : https://my.indoo.rs/javadoc/
 
+public class MainActivity
+    extends FragmentActivity
+    implements
+        IndoorsLocationListener,
+        TextToSpeech.OnInitListener
+//        BeaconConsumer
+{
 
-public class MainActivity extends FragmentActivity implements IndoorsLocationListener {
+	final Context context = this;
+
 	protected static final int REQUEST_OK = 1;
-	protected static final String LOG = "Voice";
-	private static final String LOG_TAG = "DEBUG: ";
-	//public class MainActivity extends ActionBarActivity implements IndoorsLocationListener {
+	protected static final String
+		VOICE_TAG = "Voice",
+		LOG_TAG = "DEBUG: ",
+		BEACON_SIG_TAG = "BEACON_SIG_TEST: ";
 
+	// UI Elements
 	private IndoorsSurfaceFragment indoorsFragment;
+	//private ZoneSelectionFragment zoneSelectionFragment;
 	private SurfaceState surfaceState;
 	private IndoorsSurface indoorsSurface;
 
 	private Menu menu;
-	final Context context = this;
-
-	private volatile EditText startText;
-	private EditText endText;
+	private EditText startText, endText;
 	private Button cancel, display;
+
+	private Building building;
+    private long buildingId = 566904373; // old 579366046 ( 579387616 = expert mode version )
+    private boolean inRoute = false;
 	public List<Zone> currZones;
 
-	static int count = 0;
-	ArrayList<String> ar = new ArrayList<String>();
+	private TextToSpeech tts;
+//	private BeaconManager beaconManager;
 
-	Coordinate start1;
-	Coordinate end1;
-	//private ZoneSelectionFragment zoneSelectionFragment
-	//private IndoorsSurfaceFragment indoorsSurfaceFragment;
+	private ArrayList<Coordinate> activeRouteCoordinates = new ArrayList<Coordinate>();
+	private Coordinate start1, end1, activeDestination = null;
 
-	Building building;
+
+    // Things to Update later:
+    // when closing and coming back to app
+        // save settings like:
+            // show all zones
+            // number of steps?
+
+    //look up route snapping
 
 
 	@Override
@@ -94,39 +123,36 @@ public class MainActivity extends FragmentActivity implements IndoorsLocationLis
 		IndoorsSurfaceFactory.Builder surfaceBuilder = new IndoorsSurfaceFactory.Builder();
 
 		indoorsBuilder.setContext(this);
-
-//		indoorsBuilder.setApiKey("2dafb500-5aa0-4af8-b40f-5aec82ed50e4"); // old
 		indoorsBuilder.setApiKey("fc6d16ff-e3b1-4b2a-b43e-d09c5f152063");
 
-		// TODO: replace 12345 with the id of the building you uploaded to
-		// our cloud using the MMT
-//		indoorsBuilder.setBuildingId((long) 466393307); // Old
-		indoorsBuilder.setBuildingId((long) 559582343); // 559582343 - curr
+		// our cloud using the MMT Tool
+		indoorsBuilder.setBuildingId(buildingId);
 		indoorsBuilder.setEvaluationMode(false);
 
 
 		// callback for indoo.rs-events
 		indoorsBuilder.setUserInteractionListener(this);
 
-		// TODO: load bitmaps
-//		Bitmap navigationArrow = BitmapFactory.decodeResource(context.getResources(), R.drawable.arrow);;
-////		Bitmap navigationPoint = null;
-//
-//		SurfacePainterConfiguration configuration = DefaultSurfacePainterConfiguration.getConfiguration();
-//		configuration.setNavigationArrow(navigationArrow);
-////		configuration.setNavigationPoint(navigationPoint);
-//
-//		surfaceBuilder.setSurfacePainterConfiguration(configuration);
-
 		surfaceBuilder.setIndoorsBuilder(indoorsBuilder);
+
+		// navigation arrow
+		Bitmap navigationArrow = BitmapFactory.decodeResource(context.getResources(), R.drawable.arrow);
+		SurfacePainterConfiguration configuration = DefaultSurfacePainterConfiguration.getConfiguration();
+		configuration.setNavigationArrow(navigationArrow);
+
+		surfaceBuilder.setSurfacePainterConfiguration(configuration);
+
 		indoorsFragment = surfaceBuilder.build();
 		indoorsFragment.setViewMode(ViewMode.HIGHLIGHT_CURRENT_ZONE);
-		indoorsFragment.getSurfaceState().orientedNaviArrow = true; // set navgigation arrow on
-
+		indoorsFragment.getSurfaceState().orientedNaviArrow = true; // set navigation arrow on
+//		indoorsFragment.registerOnSurfaceClickListener(surfaceClicked);
 
 		FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
 		transaction.add(android.R.id.content, indoorsFragment, "indoors");
 		transaction.commit();
+
+		tts = new TextToSpeech(this, this);
+//		initBeaconFinder();
 		/*
 		if (getResources().getBoolean(R.bool.default_show_all_zones)) {
 			indoorsFragment.setViewMode(ViewMode.HIGHLIGHT_ALL_ZONES);
@@ -137,84 +163,192 @@ public class MainActivity extends FragmentActivity implements IndoorsLocationLis
 		}
 		*/
 
+	}
+    /*
+	public void initBeaconFinder(){
+		beaconManager = BeaconManager.getInstanceForApplication(this);
+		beaconManager.getBeaconParsers().add(new BeaconParser().
+				setBeaconLayout("m:2-3=0215,i:4-19,i:20-21,i:22-23,p:24-24"));
+		beaconManager.bind(this);
+	}
+	*/
 
-		// set up speech recognizer
-		Intent i = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
-		i.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, "en-US");
-		try {
-			startActivityForResult(i, REQUEST_OK);
-		} catch (Exception e) {
-			Toast.makeText(this, "Error initializing speech to text engine.", Toast.LENGTH_LONG).show();
-		}
-
+	public void surfaceClicked(IndoorsSurface.OnSurfaceClickListener mListener){
+		Toast.makeText(this, "clicked map", Toast.LENGTH_LONG).show();
 	}
 
-	@Override
-	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-		super.onActivityResult(requestCode, resultCode, data);
-		if (requestCode==REQUEST_OK  && resultCode==RESULT_OK) {
-			ArrayList<String> thingsYouSaid = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
-//			((TextView)findViewById(R.id.text1)).setText(thingsYouSaid.get(0));
+	private void speakOut(String txt) {
+		tts.speak(txt, TextToSpeech.QUEUE_FLUSH, null);
+	}
 
-			String whole =  "";
+	public void routeAToB(Coordinate destCoord){
+		indoorsFragment.getIndoors().getRouteAToB(indoorsFragment.getCurrentUserPosition(), destCoord, new RoutingCallback() {
 
-			for(String thing : thingsYouSaid){
-				whole += " " + thing;
+			@Override
+			public void onError(IndoorsException arg0) {
+				// TODO Auto-generated method stub
+				Log.d(LOG_TAG, "Routing error" + arg0.toString());
 			}
-			whole = whole.substring(1); //remove first space
-			Log.d(LOG, whole);
 
+			@Override
+			public void setRoute(ArrayList<Coordinate> arg0) {
+				Log.d(LOG_TAG, "Coords: " + arg0.get(arg0.size() - 1).x + ", " + arg0.get(arg0.size() - 1).y);
+				Toast.makeText(context, "setRoute" + arg0.get(0).x + ", " + arg0.get(0).y, Toast.LENGTH_LONG).show();
+
+				indoorsFragment.getSurfaceState().setRoutingPath(arg0, false);
+				indoorsFragment.updateSurface();
+
+				activeRouteCoordinates = (ArrayList<Coordinate>) arg0.clone();
+				inRoute = true;
+
+				if (activeRouteCoordinates.size() > 0) {
+					String turnDir = determineNextTurn(arg0.get(0));
+					if (turnDir.equals("")) {
+						speakOut("Go Straight");
+					} else {
+						speakOut("Turn " + turnDir);
+					}
+
+				}
+			}
+		});
+	}
+
+
+	public String determineNextTurn(Coordinate userPosition){
+		String turnDirection = "";
+		if(activeRouteCoordinates.size() > 2) {
+
+			// 3 points ( userPosition, activeRouteCoordinates[1], activeRouteCoordinates[2] )
+			// whats the diff between userPos and activeRouteCoords[1]
+			// check which diff is greater
+			String diffVal1 = getGreaterDiff(userPosition, activeRouteCoordinates.get(1));
+			//        CoordType type = CoordType.valueOf(diffVal1);
+
+			String diffVal2 = getGreaterDiff(activeRouteCoordinates.get(1), activeRouteCoordinates.get(2));
+			//        CoordType type2 = CoordType.valueOf(diffVal2);
+
+			// first hop
 			/*
-			switch(thingsYouSaid.get(0).toLowerCase()){
-				case "this is sweet":
-//					((TextView)findViewById(R.id.text1)).setText("Darn Right it is!");
+			switch(type){
+				case XP: // x pos
+					if(diffVal2.equals("YP")){
+						turnDirection = "Right";
+					}else if(diffVal2.equals("YN")){
+						turnDirection = "Left";
+					}
 					break;
-				case "android is awesome":
-//					((TextView)findViewById(R.id.text1)).setText("Yes I am");
+				case XN: // x neg
+					if(diffVal2.equals("YP")){
+						turnDirection = "Left";
+					}else if(diffVal2.equals("YN")){
+						turnDirection = "Right";
+					}
 					break;
-				case "exit":
-				case "close":
-//					((TextView)findViewById(R.id.text1)).setText("Exiting");
-
-					// close app
-					finish();
-					System.exit(0);
+				case YP: // y pos
+					if(diffVal2.equals("XP")){
+						turnDirection = "Left";
+					}else if(diffVal2.equals("XN")){
+						turnDirection = "Right";
+					}
+					break;
+				case YN: // y neg
+					if(diffVal2.equals("XP")){
+						turnDirection = "Right";
+					}else if(diffVal2.equals("XN")){
+						turnDirection = "Left";
+					}
 					break;
 			}
 			*/
+
+			if (diffVal1.equals("XP")) {
+				if (diffVal2.equals("YP")) {
+					turnDirection = "Right";
+				} else if (diffVal2.equals("YN")) {
+					turnDirection = "Left";
+				}
+			}
+			if (diffVal1.equals("XN")) {
+				if (diffVal2.equals("YP")) {
+					turnDirection = "Left";
+				} else if (diffVal2.equals("YN")) {
+					turnDirection = "Right";
+				}
+			}
+			if (diffVal1.equals("YP")) {
+				if (diffVal2.equals("XP")) {
+					turnDirection = "Left";
+				} else if (diffVal2.equals("XN")) {
+					turnDirection = "Right";
+				}
+			}
+			if (diffVal1.equals("YN")) {
+				if (diffVal2.equals("XP")) {
+					turnDirection = "Right";
+				} else if (diffVal2.equals("XN")) {
+					turnDirection = "Left";
+				}
+			}
+
+			if(!turnDirection.equals("")) {
+				Toast.makeText(this, "turn " + turnDirection, Toast.LENGTH_LONG).show();
+			}
+			activeRouteCoordinates.remove(0); // remove first coord in activeRouteCoordinates[]
 		}
+        return turnDirection;
 	}
 
+	// returns whichever difference is greater
+    // may want to return hashmap - or string with ( x or y )
+	public String getGreaterDiff(Coordinate coord1, Coordinate coord2){
+		String diffVal;
+        int x1 = coord1.x,
+			x2 = coord2.x,
+			y1 = coord1.y,
+			y2 = coord2.y;
 
-	@Override
-	protected void onStop() {
-		super.onStop();
-
-//		indoors.removeLocationListener(this);
-
-//		IndoorsFactory.releaseInstance(this);
+		// difference between x's is greater
+		if( Math.abs(x2 - x1) > Math.abs(y2 - y1) ){
+			Log.d(LOG_TAG, "DIFF" + Math.abs(x2 - x1) + ":"+ Math.abs(y2 - y1));
+            diffVal = "X";
+            diffVal += ((x2 - x1) > 0) ? "P" : "N";// may want to change to string ( pos or neg )
+		}
+		// difference between y's is greater
+		else{
+            diffVal = "Y";
+            diffVal += ((y2 - y1) > 0) ? "P" : "N";
+		}
+		Log.d(LOG_TAG, "diffVal: " + diffVal);
+		return diffVal;
 	}
 
 	// need to use this to update view ( need accurate res )
 	public void positionUpdated(Coordinate userPosition, int accuracy) {
-		//System.out.println("positionUpdated");
 
-		Coordinate userPosCoord = indoorsFragment.getCurrentUserPosition();
-		Toast.makeText(this, "getCurrentUserPosition: " + userPosCoord.toString(), Toast.LENGTH_SHORT).show();
+		// REROUTING - OFF COURSE
+		// save current destination as class variable
+		// save array of zones that exist in a given route
+		// check if current zone they are at is in the array  of zones in that route
+		// if so then they are good, if not recalculate to their destination give their current location
 
-		GeoCoordinate geoCoordinate = indoorsFragment.getCurrentUserGpsPosition();
+        // make sure they are in a route
+        if(inRoute){
+            // if the current route coordinates array has entries
+            if(activeRouteCoordinates.size() > 0) {
+                String turnDir = determineNextTurn(userPosition);
+                if(turnDir.equals("")){
+                    speakOut("Go Straight");
+                }else{
+                    speakOut("Turn " + turnDir);
+                }
+            }
 
-		if (geoCoordinate != null) {
-			Toast.makeText(
-					this,
-					"User is located at " + geoCoordinate.getLatitude() + ","
-							+ geoCoordinate.getLongitude(), Toast.LENGTH_SHORT).show();
-		}
-
-		// Presently the below function is calculating the static route
-		//calculateRoute();
-
-
+            // handle rerouting ( NEEDS TO BE FINISHED )
+            if(activeDestination != null) {
+//                routeAToB(activeDestination);
+            }
+        }
 	}
 
 
@@ -226,9 +360,8 @@ public class MainActivity extends FragmentActivity implements IndoorsLocationLis
 	public void buildingLoaded(Building building) {
 		// indoo.rs SDK successfully loaded the building you requested and
 		// calculates a position now
-		System.out.println("buildingLoaded");
-		Toast.makeText(
-				this,
+        Log.d(LOG_TAG, "buildingLoaded");
+		Toast.makeText(this,
 				"Building is located at " + building.getLatOrigin() / 1E6 + ","
 						+ building.getLonOrigin() / 1E6, Toast.LENGTH_SHORT).show();
 	}
@@ -239,17 +372,16 @@ public class MainActivity extends FragmentActivity implements IndoorsLocationLis
 
 	public void changedFloor(int floorLevel, String name) {
 		// user changed the floor
-
 		try {
 			if (floorLevel != Integer.MAX_VALUE) { // nur wenn auch definitiv sicher
 				if (name.equals("floor")) { // Name Hack (indoo.rs SDK <= 1.9.0 floor name is always "floor")
 					Floor floor = building.getFloorByLevel(floorLevel);
 					name = floor.getName();
 				}
-				System.out.println("floor:" + name);
 				//sendResult("changedFloor", floorLevel + "|" + name, "message", PluginResult.Status.OK);
 			}
 		} catch (Exception e) {
+			Log.d(LOG_TAG, "ChangedFloor Exception: " + e.toString());
 		}
 	}
 
@@ -263,21 +395,14 @@ public class MainActivity extends FragmentActivity implements IndoorsLocationLis
 
 	public void orientationUpdated(float orientation) {
 		// user changed the direction he's heading to
-		//System.out.println("testing");
 //		Toast.makeText(this,"User Direction " + orientation, Toast.LENGTH_SHORT).show();
-//		System.out.print("orientation: " +orientation);
+//		Log.d(LOG_TAG, "orientation: " + orientation);
 	}
 
 	public void enteredZones(List<Zone> zones) {
-
-		//System.out.println("size:" + zones.size());
 		for (Zone zone : zones) {
 			Toast.makeText(this, "You are at the Zone " + zone.getName(), Toast.LENGTH_SHORT).show();
-
 		}
-
-		// see if we can get proximity here
-
 	}
 	public boolean onCreateOptionsMenu(final Menu menu) {
 		getMenuInflater().inflate(R.menu.main_menu, menu);
@@ -290,7 +415,7 @@ public class MainActivity extends FragmentActivity implements IndoorsLocationLis
 		int id = item.getItemId();
 		switch (id){
 			case R.id.route_search:
-				//Toast.makeText(MainActivity.this, "Route is Selected", Toast.LENGTH_SHORT).show();
+                stopCurrentRoute();
 				final Dialog dialog = new Dialog(MainActivity.this);
 				dialog.setContentView(R.layout.layout);
 				dialog.setTitle("Where do you want to go ?");
@@ -304,8 +429,6 @@ public class MainActivity extends FragmentActivity implements IndoorsLocationLis
 					@Override
 					public void onClick(View v){
 						dialog.dismiss();
-						//indoorsSurface.updatePainter();
-//						calculateRoute(startText.getText().toString(),endText.getText().toString());
 						String[] coords = endText.getText().toString().split(",");
 						int x = Integer.parseInt(coords[0]),
 							y = Integer.parseInt(coords[1]),
@@ -322,115 +445,31 @@ public class MainActivity extends FragmentActivity implements IndoorsLocationLis
 
 							@Override
 							public void setRoute(ArrayList<Coordinate> arg0) {
-								Log.d(LOG_TAG, "Coords: " + arg0.get(arg0.size()- 1).x + ", " + arg0.get(arg0.size()- 1).y);
 								Toast.makeText(context, "setRoute" +  arg0.get(0).x + ", " + arg0.get(0).y, Toast.LENGTH_LONG).show();
 								indoorsFragment.getSurfaceState().setRoutingPath(arg0, false);
-
 								indoorsFragment.updateSurface();
 							}
 						});
-
-
 					}
 				});
 
 				cancel.setOnClickListener(new View.OnClickListener() {
 					@Override
 					public void onClick(View v) {
-						//System.out.println("in cancel");
 						dialog.cancel();
-
 					}
 				});
 				dialog.show();
 				return true;
 
-			case R.id.menu_search_invoke:
-				// show all zones here and add on click listener to each to calc route
-				final Dialog searchDialog = new Dialog(MainActivity.this);
-				searchDialog.setContentView(R.layout.search_routes);
-				searchDialog.setTitle("Select a destination");
-
-				TableLayout tblLayout = (TableLayout)searchDialog.findViewById(R.id.tblSearchRoutes);
-				tblLayout.setLayoutParams(new TableLayout.LayoutParams(TableLayout.LayoutParams.MATCH_PARENT, TableLayout.LayoutParams.WRAP_CONTENT));
-
-				cancel = (Button) searchDialog.findViewById(R.id.search_cancel);
-
-				indoorsFragment.setViewMode(ViewMode.HIGHLIGHT_ALL_ZONES);
-				currZones = indoorsFragment.getZones(); // gets all zones
-
-				for(Zone zone : currZones){
-					Log.d(LOG_TAG, "Zone Name: " + zone.getName());
-					TableRow row = new TableRow(this);
-					row.setLayoutParams(new TableRow.LayoutParams(TableRow.LayoutParams.MATCH_PARENT, TableRow.LayoutParams.WRAP_CONTENT));
-
-					TextView t = new TextView(this);
-					t.setLayoutParams(new TableRow.LayoutParams(TableRow.LayoutParams.MATCH_PARENT, TableRow.LayoutParams.WRAP_CONTENT));
-
-					int tenDp = getPixelsByDp(10);
-					t.setPadding(tenDp, tenDp, tenDp, tenDp);
-
-					// get first coordinate in arraylist for given zone
-					Coordinate zoneCoord = ((ArrayList < Coordinate >)zone.getZonePoints()).get(2);
-					String zoneCoordString = zoneCoord.x + "," + zoneCoord.y + "," + zoneCoord.z;
-					t.setContentDescription( zoneCoordString );
-//					t.setContentDescription( zone.getName() );
-
-					t.setText(zone.getName()); // sets the text view to name of zone
-
-					t.setOnClickListener(new View.OnClickListener() {
-
-						@Override
-						public void onClick(View v) {
-							String zoneCoords = v.getContentDescription().toString();
-							String[] coords = zoneCoords.split(",");
-							int x = Integer.parseInt(coords[0]),
-								y = Integer.parseInt(coords[1]),
-								z = Integer.parseInt(coords[2]);
-							Coordinate zoneCoord = new Coordinate(x, y, z);
-							searchDialog.dismiss();
-							Log.d(LOG_TAG, "Coords" + coords[0] + ", " + coords[1] + ", " + coords[2]);
-							// get current position
-//							calculateRoute("lab", zoneName);
-//							indoorsFragment.routeTo(zoneCoord, false);
-
-							// might not be working because im not in the building
-							indoorsFragment.getIndoors().getRouteAToB(indoorsFragment.getCurrentUserPosition(), zoneCoord, new RoutingCallback() {
-
-								@Override
-								public void onError(IndoorsException arg0) {
-									// TODO Auto-generated method stub
-									Log.d(LOG_TAG, "Routing error" + arg0.toString());
-								}
-
-								@Override
-								public void setRoute(ArrayList<Coordinate> arg0) {
-									Log.d(LOG_TAG, "Coords: " + arg0.get(arg0.size()- 1).x + ", " + arg0.get(arg0.size()- 1).y);
-									Toast.makeText(context, "setRoute" +  arg0.get(0).x + ", " + arg0.get(0).y, Toast.LENGTH_LONG).show();
-									indoorsFragment.getSurfaceState().setRoutingPath(arg0, false);
-
-									indoorsFragment.updateSurface();
-								}
-							});
-						}
-					});
-					// set onclick listener
-					row.addView(t);
-					tblLayout.addView(row);
-				}
-
-				cancel.setOnClickListener(new View.OnClickListener() {
-					@Override
-					public void onClick(View v) {
-						//System.out.println("in cancel");
-						searchDialog.cancel();
-					}
-				});
-
-				searchDialog.show();
-
+			case R.id.menu_speech_invoke:
+                stopCurrentRoute();
+				startSpeechRecognizer();
 				return true;
-
+			case R.id.menu_search_invoke:
+                stopCurrentRoute();
+				showRoutesDialog();
+				return true;
 			case R.id.menu_show_all_zones:
 				item.setChecked(!item.isChecked());
 				refreshViewMode();
@@ -440,6 +479,88 @@ public class MainActivity extends FragmentActivity implements IndoorsLocationLis
 		return super.onOptionsItemSelected(item);
 	}
 
+    private void stopCurrentRoute(){
+        indoorsFragment.updateSurface();
+        inRoute = false;
+    }
+
+    private void showRoutesDialog(){
+        // show all zones here and add on click listener to each to calc route
+        final Dialog searchDialog = new Dialog(MainActivity.this);
+        searchDialog.setContentView(R.layout.search_routes);
+        searchDialog.setTitle("Select a destination");
+
+        TableLayout tblLayout = (TableLayout)searchDialog.findViewById(R.id.tblSearchRoutes);
+
+        cancel = (Button) searchDialog.findViewById(R.id.search_cancel);
+
+        indoorsFragment.setViewMode(ViewMode.HIGHLIGHT_ALL_ZONES);
+        currZones = indoorsFragment.getZones(); // gets all zones
+
+        for(Zone zone : currZones){
+            Log.d(LOG_TAG, "Zone Name: " + zone.getName());
+            TableRow row = new TableRow(this);
+            row.setLayoutParams(new TableRow.LayoutParams(TableRow.LayoutParams.MATCH_PARENT, TableRow.LayoutParams.WRAP_CONTENT));
+
+            View spacer = new View(this);
+            spacer.setLayoutParams(new TableRow.LayoutParams(TableRow.LayoutParams.MATCH_PARENT, 2));
+            spacer.setBackgroundColor(Color.WHITE);
+
+            TextView t = new TextView(this);
+            t.setLayoutParams(new TableRow.LayoutParams(TableRow.LayoutParams.MATCH_PARENT, TableRow.LayoutParams.WRAP_CONTENT));
+
+            int tenDp = getPixelsByDp(10);
+            t.setPadding(tenDp, tenDp, tenDp, tenDp);
+
+            // get first coordinate in arraylist for given zone
+            Coordinate zoneCoord = ((ArrayList < Coordinate >)zone.getZonePoints()).get(2);
+            String zoneCoordString = zoneCoord.x + "," + zoneCoord.y + "," + zoneCoord.z;
+            t.setContentDescription( zoneCoordString );
+
+            t.setText(zone.getName()); // sets the text view to name of zone
+
+            t.setOnClickListener(new View.OnClickListener() {
+
+                @Override
+                public void onClick(View v) {
+                    String zoneCoords = v.getContentDescription().toString();
+                    String[] coords = zoneCoords.split(",");
+                    int x = Integer.parseInt(coords[0]),
+                            y = Integer.parseInt(coords[1]),
+                            z = Integer.parseInt(coords[2]);
+                    Coordinate zoneCoord = new Coordinate(x, y, z);
+                    activeDestination = zoneCoord;
+                    searchDialog.dismiss();
+
+                    routeAToB(activeDestination);
+                }
+            });
+            // set onclick listener
+            row.addView(t);
+            row.addView(spacer);
+            tblLayout.addView(row);
+        }
+
+        cancel.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				searchDialog.cancel();
+			}
+		});
+
+        searchDialog.show();
+    }
+
+    private void startSpeechRecognizer(){
+        // set up speech recognizer
+        Intent i = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+        i.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, "en-US");
+        try {
+            startActivityForResult(i, REQUEST_OK);
+        } catch (Exception e) {
+            Toast.makeText(this, "Error initializing speech to text engine:" + e.toString(), Toast.LENGTH_LONG).show();
+        }
+    }
 
 	private void refreshViewMode() {
 		indoorsFragment.setViewMode(ViewMode.DEFAULT);
@@ -448,104 +569,140 @@ public class MainActivity extends FragmentActivity implements IndoorsLocationLis
 		if (allZonesItem.isChecked()) {
 			indoorsFragment.setViewMode(ViewMode.HIGHLIGHT_ALL_ZONES);
 		}
-
-
 	}
 
 	public int getPixelsByDp(int sizeInDp){
 		float scale = getResources().getDisplayMetrics().density;
 		return (int) (sizeInDp*scale + 0.5f);
 	}
+    /*
+	public Beacon findActiveBeacon(Beacon nearbyBeacon){
 
-	public void calculateRoute(String start, String end) {
+		Beacon currMapBeacon;
 
-		int startX = 0;
-		int startY = 0;
-		int endX = 0;
-		int endY = 0;
-		indoorsFragment.updateSurface();
-		System.out.println("start name:" + start);
-		System.out.println("end name:" + end);
+		// search through beacons on map and find the one that we are closest to.
 
-		for (Zone zone : indoorsFragment.getZones()) {
-			System.out.println("Zone Name:" + zone.getName());
-			/*ArrayList<Zone> zones = new ArrayList<Zone>();
-			for (Zone zone1 : zones) {
-				//	Toast.makeText(this, "You are at the Zone " + zone.getName(), Toast.LENGTH_SHORT).show();
-				System.out.println("vvvv:"+zone1.getName());
-			}*/
-			ar.add(zone.getName());
-			System.out.println("vvvv:" + ar);
 
-				if (zone.getName().equals(start)) {
-				for (Coordinate c : zone.getZonePoints()) {
-					System.out.println("one");
-					System.out.println("source-x:"+c.x);
-					System.out.println("source-y:"+c.y);
-					startX += c.x;
-					startY += c.y;
+
+		return currMapBeacon;
+	}
+	*/
+
+	/*
+	 * Handles searching for beacons nearby and
+	 * determining the distance from your current location to the beacon
+	 */
+
+    /*
+	@Override
+	public void onBeaconServiceConnect() {
+		beaconManager.setRangeNotifier(new RangeNotifier() {
+			@Override
+			public void didRangeBeaconsInRegion(Collection<Beacon> beacons, Region region) {
+				Log.d(BEACON_SIG_TAG, "Beacon Array Size: " + beacons.size());
+				if (beacons.size() > 0) {
+					Beacon nearbyBeacon = beacons.iterator().next();
+					Log.i(BEACON_SIG_TAG, "The first beacon I see is about " + nearbyBeacon.getDistance() + " meters away.");
+
+					// What other properties do Beacons have?
+					// try to match that beacon with the beacons saved in the map
+
+					// once we know which beacon it is
+						// find out which beacon / coordinate is next in activeRouteCoords
+						// then call determine next turn??
+
+					findActiveBeacon(nearbyBeacon);
+
+
 				}
-					startX /= zone.getZonePoints().size();
-					startY /= zone.getZonePoints().size();
-					//System.out.println("startX:"+startX);
-					//System.out.println("startY:"+startY);
-				}
-				else if (zone.getName().equals(end)) {
-				for (Coordinate c : zone.getZonePoints()) {
-					System.out.println("two");
-					System.out.println("end-x:"+c.x);
-					System.out.println("end-y:"+c.y);
-					endX += c.x;
-					endY += c.y;
-				}
-					endX /= zone.getZonePoints().size();
-					endY /= zone.getZonePoints().size();
-					//System.out.println("endX:" + endX);
-					//System.out.println("endY:"+endY);
-				}/*
-				else {
-					Toast.makeText(this, "No Zones found!", Toast.LENGTH_SHORT)
-							.show();
-					startX = 0;
-					startY = 0;
-					endX = 0;
-					endY = 0;
-					//System.exit(0);
-				}*/
-
-			//System.out.println("X:"+(startX-endX));
-			//System.out.println("Y:"+(startY-endY));
-			//Coordinate start1 = new Coordinate(startX, startY, 3);
-			//Coordinate end1 = new Coordinate(endX, endY, 3);
-			System.out.println("startX:"+startX);
-			System.out.println("startY:"+startY);
-
-			System.out.println("endX:" + endX);
-			System.out.println("endY:" + endY);
-			if((startX == 0) || (startY == 0) || (endX == 0) || (endY == 0) ){
-				 start1 = new Coordinate(0, 0, 3);
-				 end1 = new Coordinate(0, 0, 3);
 			}
-			else{
-				 start1 = new Coordinate(startX, startY, 3);
-				 end1 = new Coordinate(endX, endY, 3);
+		});
+
+		try {
+			Log.d(BEACON_SIG_TAG, "Ranging: ");
+			beaconManager.startRangingBeaconsInRegion(new Region("myRangingUniqueId", null, null, null));
+		} catch (RemoteException e) {  Log.d(BEACON_SIG_TAG, "ranging exception: " + e.toString());  }
+	}
+	*/
+
+	/*
+	 * Handles results from speech to text listener
+	 */
+
+	@Override
+	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+		super.onActivityResult(requestCode, resultCode, data);
+		if (requestCode==REQUEST_OK  && resultCode==RESULT_OK) {
+			ArrayList<String> thingsYouSaid = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
+
+			String whole =  "";
+
+			for(String thing : thingsYouSaid){
+				whole += " " + thing;
 			}
-			indoorsFragment.getIndoors().getRouteAToB(start1, end1, new RoutingCallback() {
-				@Override
-				public void onError(IndoorsException arg0) {
-					// TODO Auto-generated method stub
-				}
+			whole = whole.substring(1); //remove first space
+			Log.d(VOICE_TAG, whole);
 
-				@Override
-				public void setRoute(ArrayList<Coordinate> arg0) {
-					indoorsFragment.getSurfaceState().setRoutingPath(arg0, true);
-					indoorsFragment.updateSurface();
-				}
-			});
+			currZones = indoorsFragment.getZones(); // gets all zones
+			String retVal = "You did not say an existing location.";
 
+
+			for(Zone zone : currZones) {
+				String zoneName = zone.getName();
+				Coordinate zoneCoord = zone.getZonePoints().get(2);
+				if(thingsYouSaid.get(0).toLowerCase().equals("route me to " + zoneName.toLowerCase()) ){
+					Log.d(VOICE_TAG, "YOU SAID ROUTE ME TO " + zoneName);
+					retVal = "Routing to " + zoneName;
+					activeDestination = zoneCoord;
+					routeAToB(activeDestination);
+
+				}else if(thingsYouSaid.get(0).toLowerCase().equals("route me to class " + zoneName.toLowerCase()) ){
+					Log.d(VOICE_TAG, "YOU SAID ROUTE ME TO CLASS " + zoneName);
+					retVal = "Routing to " + zoneName;
+					activeDestination = zoneCoord;
+					routeAToB(activeDestination);
+
+				}
+			}
+			Toast.makeText(this, retVal, Toast.LENGTH_LONG).show();
+			speakOut(retVal);
+		}
+	}
+
+	@Override
+	public void onInit(int status) {
+		if (status == TextToSpeech.SUCCESS) {
+			int result = tts.setLanguage(Locale.US);
+
+			if (result == TextToSpeech.LANG_MISSING_DATA
+					|| result == TextToSpeech.LANG_NOT_SUPPORTED) {
+				Log.e("TTS", "This Language is not supported");
+			}
+		} else {
+			Log.e("TTS", "Initilization Failed!");
+		}
+	}
+
+	@Override
+	protected void onDestroy() {
+		super.onDestroy();
+//		beaconManager.unbind(this);
+	}
+
+	@Override
+	protected void onStop() {
+		super.onStop();
+
+		// Don't forget to shutdown tts!
+		if (tts != null) {
+			tts.stop();
+			tts.shutdown();
 		}
 
+//		indoors.removeLocationListener(this);
+//		IndoorsFactory.releaseInstance(this);
 	}
+
 }
 
 //grep -rnw * -e "menu_search_invoke"

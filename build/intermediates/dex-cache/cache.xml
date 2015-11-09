@@ -15,5 +15,12 @@
         sha1="e618ea4c02de46535af5cd7b3ceb61006935e812">
         <dex dex="/Users/claytonherendeen/Documents/Projects/Android/IndoorApp/app/build/intermediates/pre-dexed/debug/indoors-library-surface-a8fd6c4391c313acf9c15094dc09a21abe163537.jar" />
     </item>
+    <item
+        jar="/Users/claytonherendeen/Documents/Projects/Android/IndoorApp/app/build/intermediates/exploded-aar/org.altbeacon/android-beacon-library/2.6.1/jars/classes.jar"
+        jumboMode="false"
+        revision="22.0.1"
+        sha1="6d3728cf62d53de7395707c000051735ea8c298c">
+        <dex dex="/Users/claytonherendeen/Documents/Projects/Android/IndoorApp/app/build/intermediates/pre-dexed/debug/classes-6ae5ccc4fcc0dc7541d146d81b0a7db708655907.jar" />
+    </item>
 
 </items>
