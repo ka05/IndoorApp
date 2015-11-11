@@ -63,7 +63,7 @@ import com.customlbs.surface.library.ViewMode;
  *
  */
 
-// May want to redisgn using Material design
+// May want to redesign using Material design
 // http://alexzh.com/tutorials/material-style-for-dialogs-in-android-application/
 // https://my.indoo.rs/javadoc/mmt_guide/#MeasurePoints
 // JAVADOC : https://my.indoo.rs/javadoc/
@@ -182,36 +182,40 @@ public class MainActivity
 	}
 
 	public void routeAToB(Coordinate destCoord){
-		indoorsFragment.getIndoors().getRouteAToB(indoorsFragment.getCurrentUserPosition(), destCoord, new RoutingCallback() {
+        if(indoorsFragment.getCurrentUserPosition() != null){
+            indoorsFragment.getIndoors().getRouteAToB(indoorsFragment.getCurrentUserPosition(), destCoord, new RoutingCallback() {
 
-			@Override
-			public void onError(IndoorsException arg0) {
-				// TODO Auto-generated method stub
-				Log.d(LOG_TAG, "Routing error" + arg0.toString());
-			}
+                @Override
+                public void onError(IndoorsException arg0) {
+                    // TODO Auto-generated method stub
+                    Log.d(LOG_TAG, "Routing error" + arg0.toString());
+                }
 
-			@Override
-			public void setRoute(ArrayList<Coordinate> arg0) {
-				Log.d(LOG_TAG, "Coords: " + arg0.get(arg0.size() - 1).x + ", " + arg0.get(arg0.size() - 1).y);
-				Toast.makeText(context, "setRoute" + arg0.get(0).x + ", " + arg0.get(0).y, Toast.LENGTH_LONG).show();
+                @Override
+                public void setRoute(ArrayList<Coordinate> arg0) {
+                    Log.d(LOG_TAG, "Coords: " + arg0.get(arg0.size() - 1).x + ", " + arg0.get(arg0.size() - 1).y);
+                    Toast.makeText(context, "setRoute" + arg0.get(0).x + ", " + arg0.get(0).y, Toast.LENGTH_LONG).show();
 
-				indoorsFragment.getSurfaceState().setRoutingPath(arg0, false);
-				indoorsFragment.updateSurface();
+                    indoorsFragment.getSurfaceState().setRoutingPath(arg0);
+                    indoorsFragment.updateSurface();
 
-				activeRouteCoordinates = (ArrayList<Coordinate>) arg0.clone();
-				inRoute = true;
+                    activeRouteCoordinates = (ArrayList<Coordinate>) arg0.clone();
+                    inRoute = true;
 
-				if (activeRouteCoordinates.size() > 0) {
-					String turnDir = determineNextTurn(arg0.get(0));
-					if (turnDir.equals("")) {
-						speakOut("Go Straight");
-					} else {
-						speakOut("Turn " + turnDir);
-					}
+                    if (activeRouteCoordinates.size() > 0) {
+                        String turnDir = determineNextTurn(arg0.get(0));
+                        if (turnDir.equals("")) {
+                            speakOut("Go Straight");
+                        } else {
+                            speakOut("Turn " + turnDir);
+                        }
 
-				}
-			}
-		});
+                    }
+                }
+            });
+        }else{
+            Toast.makeText(context, "Sorry, you are not currently at this location", Toast.LENGTH_LONG).show();
+        }
 	}
 
 
@@ -393,6 +397,7 @@ public class MainActivity
 		// indoo.rs is still downloading or parsing the requested building
 	}
 
+
 	public void orientationUpdated(float orientation) {
 		// user changed the direction he's heading to
 //		Toast.makeText(this,"User Direction " + orientation, Toast.LENGTH_SHORT).show();
@@ -404,6 +409,9 @@ public class MainActivity
 			Toast.makeText(this, "You are at the Zone " + zone.getName(), Toast.LENGTH_SHORT).show();
 		}
 	}
+
+
+
 	public boolean onCreateOptionsMenu(final Menu menu) {
 		getMenuInflater().inflate(R.menu.main_menu, menu);
 		this.menu = menu;
@@ -446,7 +454,7 @@ public class MainActivity
 							@Override
 							public void setRoute(ArrayList<Coordinate> arg0) {
 								Toast.makeText(context, "setRoute" +  arg0.get(0).x + ", " + arg0.get(0).y, Toast.LENGTH_LONG).show();
-								indoorsFragment.getSurfaceState().setRoutingPath(arg0, false);
+								indoorsFragment.getSurfaceState().setRoutingPath(arg0);
 								indoorsFragment.updateSurface();
 							}
 						});
@@ -624,6 +632,11 @@ public class MainActivity
 		} catch (RemoteException e) {  Log.d(BEACON_SIG_TAG, "ranging exception: " + e.toString());  }
 	}
 	*/
+
+	@Override
+	public void buildingLoadingCanceled() {
+
+	}
 
 	/*
 	 * Handles results from speech to text listener
