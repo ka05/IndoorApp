@@ -49,12 +49,12 @@ import com.customlbs.surface.library.SurfaceState;
 import com.customlbs.surface.library.ViewMode;
 
 // beacon handling
-//import org.altbeacon.beacon.Beacon;
-//import org.altbeacon.beacon.BeaconConsumer;
-//import org.altbeacon.beacon.BeaconManager;
-//import org.altbeacon.beacon.BeaconParser;
-//import org.altbeacon.beacon.RangeNotifier;
-//import org.altbeacon.beacon.Region;
+import org.altbeacon.beacon.Beacon;
+import org.altbeacon.beacon.BeaconConsumer;
+import org.altbeacon.beacon.BeaconManager;
+import org.altbeacon.beacon.BeaconParser;
+import org.altbeacon.beacon.RangeNotifier;
+import org.altbeacon.beacon.Region;
 
 /**
  * Sample Android project, powered by indoo.rs :)
@@ -68,42 +68,67 @@ import com.customlbs.surface.library.ViewMode;
 // https://my.indoo.rs/javadoc/mmt_guide/#MeasurePoints
 // JAVADOC : https://my.indoo.rs/javadoc/
 
+/**
+ * This class is the main activity for the app
+ *
+ * It extends FragmentActivity because the Indoo.rs API requires it to inorder to handle
+ * the IndoorsSurfaceFragment that displays the map and handles the map interaction
+ *
+ * It implements the IndoorLocationListener interface because the app needs to listen
+ * for location updates via beacon proximity
+ *
+ * It implements the TextToSpeech.OnInitListener interface because the app needs to handle
+ * voice commands because our user base consists of people who are blind
+ *
+ * It implements the BeaconConsumer interface because the app needs to scan for
+ * nearby beacons and find the closest beacon
+ */
+
 public class MainActivity
     extends FragmentActivity
     implements
         IndoorsLocationListener,
-        TextToSpeech.OnInitListener
-//        BeaconConsumer
+        TextToSpeech.OnInitListener,
+        BeaconConsumer
 {
 
 	final Context context = this;
 
 	protected static final int REQUEST_OK = 1;
+
+    // Debug Log Tags
 	protected static final String
 		VOICE_TAG = "Voice",
 		LOG_TAG = "DEBUG: ",
 		BEACON_SIG_TAG = "BEACON_SIG_TEST: ";
 
-	// UI Elements
+	// UI Related Variables
 	private IndoorsSurfaceFragment indoorsFragment;
 	//private ZoneSelectionFragment zoneSelectionFragment;
 	private SurfaceState surfaceState;
 	private IndoorsSurface indoorsSurface;
 
+    // UI Elements
 	private Menu menu;
 	private EditText startText, endText;
 	private Button cancel, display;
 
+    // Building variables
 	private Building building;
-    private long buildingId = 566904373; // old 579366046 ( 579387616 = expert mode version )
+    private long buildingId = 566904373; // prev - 566904373 // old 579366046 ( 579387616 = expert mode version )
+
+    // Routing related variables
     private boolean inRoute = false;
 	public List<Zone> currZones;
 
-	private TextToSpeech tts;
-//	private BeaconManager beaconManager;
+	private TextToSpeech tts; // class that handles speaking out text
+	private BeaconManager beaconManager; // class that handles scanning for beacons
 
-	private ArrayList<Coordinate> activeRouteCoordinates = new ArrayList<Coordinate>();
-	private Coordinate start1, end1, activeDestination = null;
+	private ArrayList<Coordinate> activeRouteCoordinates = new ArrayList<Coordinate>(); // the list of coordinates for the currently displayed route
+	private Coordinate
+            start1,
+            end1,
+            activeDestination = null; // the coordinate for the current destination
 
 
     // Things to Update later:
@@ -112,9 +137,10 @@ public class MainActivity
             // show all zones
             // number of steps?
 
-    //look up route snapping
-
-
+    /**
+     * This method fires when the app opens
+     * @param savedInstanceState
+     */
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		setContentView(R.layout.layout);
@@ -129,30 +155,33 @@ public class MainActivity
 		indoorsBuilder.setBuildingId(buildingId);
 		indoorsBuilder.setEvaluationMode(false);
 
-
 		// callback for indoo.rs-events
 		indoorsBuilder.setUserInteractionListener(this);
 
+        // sets the UI builder that handles the map UI
 		surfaceBuilder.setIndoorsBuilder(indoorsBuilder);
 
-		// navigation arrow
+		// set navigation arrow for current user position
 		Bitmap navigationArrow = BitmapFactory.decodeResource(context.getResources(), R.drawable.arrow);
 		SurfacePainterConfiguration configuration = DefaultSurfacePainterConfiguration.getConfiguration();
 		configuration.setNavigationArrow(navigationArrow);
 
 		surfaceBuilder.setSurfacePainterConfiguration(configuration);
 
+        // build the Indoor fragment
 		indoorsFragment = surfaceBuilder.build();
 		indoorsFragment.setViewMode(ViewMode.HIGHLIGHT_CURRENT_ZONE);
 		indoorsFragment.getSurfaceState().orientedNaviArrow = true; // set navigation arrow on
 //		indoorsFragment.registerOnSurfaceClickListener(surfaceClicked);
 
+        // set current fragment to "indoors" so map displays
 		FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
 		transaction.add(android.R.id.content, indoorsFragment, "indoors");
 		transaction.commit();
 
-		tts = new TextToSpeech(this, this);
-//		initBeaconFinder();
+		tts = new TextToSpeech(this, this); // initialize the textToSpeech engine
+		initBeaconFinder(); // initialize the Beacon scanning
+
 		/*
 		if (getResources().getBoolean(R.bool.default_show_all_zones)) {
 			indoorsFragment.setViewMode(ViewMode.HIGHLIGHT_ALL_ZONES);
@@ -164,33 +193,56 @@ public class MainActivity
 		*/
 
 	}
-    /*
+
+    /**
+     * Initializes the Beacon scanner with the proper ID type for our Kontakt Beacons
+     */
 	public void initBeaconFinder(){
 		beaconManager = BeaconManager.getInstanceForApplication(this);
 		beaconManager.getBeaconParsers().add(new BeaconParser().
-				setBeaconLayout("m:2-3=0215,i:4-19,i:20-21,i:22-23,p:24-24"));
+				setBeaconLayout("m:2-3=0215,i:4-19,i:20-21,i:22-23,p:24-24")); // Kontakt Beacon ID type
 		beaconManager.bind(this);
 	}
-	*/
 
+    /**
+     * We wanted this to create a route to the clicked location. ( this would not be useful for blind users though )
+     * @param mListener
+     */
 	public void surfaceClicked(IndoorsSurface.OnSurfaceClickListener mListener){
 		Toast.makeText(this, "clicked map", Toast.LENGTH_LONG).show();
 	}
 
+    /**
+     * handles speaking out a given string
+     * @param txt : a string you want the app to speak out to the user
+     */
 	private void speakOut(String txt) {
 		tts.speak(txt, TextToSpeech.QUEUE_FLUSH, null);
 	}
 
-	public void routeAToB(Coordinate destCoord){
+    /**
+     * Handles routing from the users current position to a destination coordinate
+     * @param destCoord : destination coordinate
+     */
+	public void routeToCoord(Coordinate destCoord){
+        // make sure we can get their current location relative to the map
         if(indoorsFragment.getCurrentUserPosition() != null){
             indoorsFragment.getIndoors().getRouteAToB(indoorsFragment.getCurrentUserPosition(), destCoord, new RoutingCallback() {
 
+                /**
+                 * If error occrus then log it
+                 * @param arg0
+                 */
                 @Override
                 public void onError(IndoorsException arg0) {
                     // TODO Auto-generated method stub
                     Log.d(LOG_TAG, "Routing error" + arg0.toString());
                 }
 
+                /**
+                 * handles setting the route and displaying the route on the map
+                 * @param arg0 : the arraylist of route coordinates
+                 */
                 @Override
                 public void setRoute(ArrayList<Coordinate> arg0) {
                     Log.d(LOG_TAG, "Coords: " + arg0.get(arg0.size() - 1).x + ", " + arg0.get(arg0.size() - 1).y);
@@ -202,8 +254,10 @@ public class MainActivity
                     activeRouteCoordinates = (ArrayList<Coordinate>) arg0.clone();
                     inRoute = true;
 
+                    // if the route array is not empty then start turn by turn directions
                     if (activeRouteCoordinates.size() > 0) {
                         String turnDir = determineNextTurn(arg0.get(0));
+                        // no turn necessary
                         if (turnDir.equals("")) {
                             speakOut("Go Straight");
                         } else {
@@ -218,7 +272,11 @@ public class MainActivity
         }
 	}
 
-
+    /**
+     * handles determining turns ( needs to be refined to handle route tails )
+     * @param userPosition : users current position on the map
+     * @return
+     */
 	public String determineNextTurn(Coordinate userPosition){
 		String turnDirection = "";
 		if(activeRouteCoordinates.size() > 2) {
@@ -233,6 +291,7 @@ public class MainActivity
 			//        CoordType type2 = CoordType.valueOf(diffVal2);
 
 			// first hop
+            // for some reason cant use switch for this?
 			/*
 			switch(type){
 				case XP: // x pos
@@ -266,6 +325,8 @@ public class MainActivity
 			}
 			*/
 
+            // this could be improved by creating a hashmap : HashMap<String, HashMap<String, String>>()
+            // and the finding the value surrounded by ** in HashMap<String, HashMap<String, **String**>>
 			if (diffVal1.equals("XP")) {
 				if (diffVal2.equals("YP")) {
 					turnDirection = "Right";
@@ -295,6 +356,7 @@ public class MainActivity
 				}
 			}
 
+            // making sure turnDirection has a value ( will be either right or left )
 			if(!turnDirection.equals("")) {
 				Toast.makeText(this, "turn " + turnDirection, Toast.LENGTH_LONG).show();
 			}
@@ -303,8 +365,15 @@ public class MainActivity
         return turnDirection;
 	}
 
-	// returns whichever difference is greater
-    // may want to return hashmap - or string with ( x or y )
+
+    /**
+     * returns whichever difference is greater
+     * may want to return hashmap - or string with ( x or y )
+     *
+     * @param coord1
+     * @param coord2
+     * @return
+     */
 	public String getGreaterDiff(Coordinate coord1, Coordinate coord2){
 		String diffVal;
         int x1 = coord1.x,
@@ -350,17 +419,25 @@ public class MainActivity
 
             // handle rerouting ( NEEDS TO BE FINISHED )
             if(activeDestination != null) {
-//                routeAToB(activeDestination);
+//                routeToCoord(activeDestination);
             }
         }
 	}
 
-
+    /**
+     * get progress of building info loading ( Map and other data )
+     *
+     * @param loadingBuildingStatus
+     */
 	@Override
 	public void loadingBuilding(LoadingBuildingStatus loadingBuildingStatus) {
 		int progress = loadingBuildingStatus.getProgress();
 	}
 
+    /**
+     * Fires when building is done loading
+     * @param building
+     */
 	public void buildingLoaded(Building building) {
 		// indoo.rs SDK successfully loaded the building you requested and
 		// calculates a position now
@@ -370,10 +447,19 @@ public class MainActivity
 						+ building.getLonOrigin() / 1E6, Toast.LENGTH_SHORT).show();
 	}
 
+    /**
+     * Error occurs
+     * @param indoorsException
+     */
 	public void onError(IndoorsException indoorsException) {
 		Toast.makeText(this, indoorsException.getMessage(), Toast.LENGTH_LONG).show();
 	}
 
+    /**
+     * change to different floor in building
+     * @param floorLevel
+     * @param name
+     */
 	public void changedFloor(int floorLevel, String name) {
 		// user changed the floor
 		try {
@@ -404,20 +490,32 @@ public class MainActivity
 //		Log.d(LOG_TAG, "orientation: " + orientation);
 	}
 
+    /**
+     * When you enter a zone on the map
+     * @param zones
+     */
 	public void enteredZones(List<Zone> zones) {
 		for (Zone zone : zones) {
 			Toast.makeText(this, "You are at the Zone " + zone.getName(), Toast.LENGTH_SHORT).show();
 		}
 	}
 
-
-
+    /**
+     * handles creating the app menu
+     * @param menu
+     * @return
+     */
 	public boolean onCreateOptionsMenu(final Menu menu) {
 		getMenuInflater().inflate(R.menu.main_menu, menu);
 		this.menu = menu;
 		return super.onCreateOptionsMenu(menu);
 	}
 
+    /**
+     * when an item in the menu is selected
+     * @param item
+     * @return
+     */
 	public boolean onOptionsItemSelected(final MenuItem item) {
 		Log.d(LOG_TAG, "Zone Name: ");
 		int id = item.getItemId();
@@ -487,11 +585,17 @@ public class MainActivity
 		return super.onOptionsItemSelected(item);
 	}
 
+    /**
+     * Stops routing
+     */
     private void stopCurrentRoute(){
         indoorsFragment.updateSurface();
         inRoute = false;
     }
 
+    /**
+     * Display a dialog with all zones ( room numbers )
+     */
     private void showRoutesDialog(){
         // show all zones here and add on click listener to each to calc route
         final Dialog searchDialog = new Dialog(MainActivity.this);
@@ -540,7 +644,7 @@ public class MainActivity
                     activeDestination = zoneCoord;
                     searchDialog.dismiss();
 
-                    routeAToB(activeDestination);
+                    routeToCoord(activeDestination);
                 }
             });
             // set onclick listener
@@ -559,6 +663,9 @@ public class MainActivity
         searchDialog.show();
     }
 
+    /**
+     * Initialize the Speech Command Recognizer
+     */
     private void startSpeechRecognizer(){
         // set up speech recognizer
         Intent i = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
@@ -570,6 +677,9 @@ public class MainActivity
         }
     }
 
+    /**
+     * refreshes the view mode of the map.
+     */
 	private void refreshViewMode() {
 		indoorsFragment.setViewMode(ViewMode.DEFAULT);
 
@@ -579,6 +689,11 @@ public class MainActivity
 		}
 	}
 
+    /**
+     * Utility function to get the pixel equivalent of a size in "dp"
+     * @param sizeInDp
+     * @return
+     */
 	public int getPixelsByDp(int sizeInDp){
 		float scale = getResources().getDisplayMetrics().density;
 		return (int) (sizeInDp*scale + 0.5f);
@@ -600,8 +715,6 @@ public class MainActivity
 	 * Handles searching for beacons nearby and
 	 * determining the distance from your current location to the beacon
 	 */
-
-    /*
 	@Override
 	public void onBeaconServiceConnect() {
 		beaconManager.setRangeNotifier(new RangeNotifier() {
@@ -611,7 +724,6 @@ public class MainActivity
 				if (beacons.size() > 0) {
 					Beacon nearbyBeacon = beacons.iterator().next();
 					Log.i(BEACON_SIG_TAG, "The first beacon I see is about " + nearbyBeacon.getDistance() + " meters away.");
-
 					// What other properties do Beacons have?
 					// try to match that beacon with the beacons saved in the map
 
@@ -619,9 +731,7 @@ public class MainActivity
 						// find out which beacon / coordinate is next in activeRouteCoords
 						// then call determine next turn??
 
-					findActiveBeacon(nearbyBeacon);
-
-
+//					findActiveBeacon(nearbyBeacon);
 				}
 			}
 		});
@@ -631,7 +741,6 @@ public class MainActivity
 			beaconManager.startRangingBeaconsInRegion(new Region("myRangingUniqueId", null, null, null));
 		} catch (RemoteException e) {  Log.d(BEACON_SIG_TAG, "ranging exception: " + e.toString());  }
 	}
-	*/
 
 	@Override
 	public void buildingLoadingCanceled() {
@@ -659,7 +768,7 @@ public class MainActivity
 			currZones = indoorsFragment.getZones(); // gets all zones
 			String retVal = "You did not say an existing location.";
 
-
+            // loop through all zones to see if they said one of them
 			for(Zone zone : currZones) {
 				String zoneName = zone.getName();
 				Coordinate zoneCoord = zone.getZonePoints().get(2);
@@ -667,13 +776,13 @@ public class MainActivity
 					Log.d(VOICE_TAG, "YOU SAID ROUTE ME TO " + zoneName);
 					retVal = "Routing to " + zoneName;
 					activeDestination = zoneCoord;
-					routeAToB(activeDestination);
+					routeToCoord(activeDestination);
 
 				}else if(thingsYouSaid.get(0).toLowerCase().equals("route me to class " + zoneName.toLowerCase()) ){
 					Log.d(VOICE_TAG, "YOU SAID ROUTE ME TO CLASS " + zoneName);
 					retVal = "Routing to " + zoneName;
 					activeDestination = zoneCoord;
-					routeAToB(activeDestination);
+					routeToCoord(activeDestination);
 
 				}
 			}
@@ -682,6 +791,10 @@ public class MainActivity
 		}
 	}
 
+    /**
+     * Initializes text to speech engine
+     * @param status
+     */
 	@Override
 	public void onInit(int status) {
 		if (status == TextToSpeech.SUCCESS) {
@@ -696,12 +809,18 @@ public class MainActivity
 		}
 	}
 
+    /**
+     * fires when app is shutdown ( closed completely )
+     */
 	@Override
 	protected void onDestroy() {
 		super.onDestroy();
 //		beaconManager.unbind(this);
 	}
 
+    /**
+     * fires when app is closed ( still running but not in front )
+     */
 	@Override
 	protected void onStop() {
 		super.onStop();

@@ -9,6 +9,13 @@
         <dex dex="/Users/claytonherendeen/Documents/Projects/Android/IndoorApp/app/build/intermediates/pre-dexed/debug/indoors-library-surface-a8fd6c4391c313acf9c15094dc09a21abe163537.jar" />
     </item>
     <item
+        jar="/Users/claytonherendeen/Documents/Projects/Android/IndoorApp/app/build/intermediates/exploded-aar/org.altbeacon/android-beacon-library/2.7/jars/classes.jar"
+        jumboMode="false"
+        revision="22.0.1"
+        sha1="fe158fe00409d807f9132f3b8a81c34e99ec87cd">
+        <dex dex="/Users/claytonherendeen/Documents/Projects/Android/IndoorApp/app/build/intermediates/pre-dexed/debug/classes-0c8ece9d77d02332ecc5d9ea3344e2971623fa04.jar" />
+    </item>
+    <item
         jar="/Users/claytonherendeen/Documents/Projects/Android/IndoorApp/app/libs/android-support-v4-r13.jar"
         jumboMode="false"
         revision="22.0.1"
