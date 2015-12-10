@@ -3,6 +3,7 @@ package com.mycompany.myfirstindoorsapp;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 
@@ -115,11 +116,16 @@ public class MainActivity
 
     // Building variables
 	private Building building;
-    private long buildingId = 566904373; // prev - 566904373 // old 579366046 ( 579387616 = expert mode version )
+	/********
+	 * CHANGE THIS BUILDING ID TO THE ID OF WHICHEVER BUILDING YOU ARE USING!
+	 * *********/
+
+    // ID with major-minor zone descriptions = 566904373
+    private long buildingId = 594812644; // prev - 566904373 // old 579366046 ( 579387616 = expert mode version )
 
     // Routing related variables
     private boolean inRoute = false;
-	public List<Zone> currZones;
+	public List<Zone> currZones = new ArrayList<Zone>();
 
 	private TextToSpeech tts; // class that handles speaking out text
 	private BeaconManager beaconManager; // class that handles scanning for beacons
@@ -130,6 +136,12 @@ public class MainActivity
             end1,
             activeDestination = null; // the coordinate for the current destination
 
+
+	private double  nearestBeaconDist = 0,
+                    totalDistUntilTurn = 0,
+                    distToNextRouteCoord = 0;
+
+	private HashMap<String, Zone> currZonesMap = new HashMap<String, Zone>();
 
     // Things to Update later:
     // when closing and coming back to app
@@ -149,6 +161,7 @@ public class MainActivity
 		IndoorsSurfaceFactory.Builder surfaceBuilder = new IndoorsSurfaceFactory.Builder();
 
 		indoorsBuilder.setContext(this);
+        // **** CHANGE THIS API KEY TO THE ONE IN YOUR ACCOUNT INFO PAGE @ https://my.indoo.rs/#  ****//
 		indoorsBuilder.setApiKey("fc6d16ff-e3b1-4b2a-b43e-d09c5f152063");
 
 		// our cloud using the MMT Tool
@@ -259,9 +272,9 @@ public class MainActivity
                         String turnDir = determineNextTurn(arg0.get(0));
                         // no turn necessary
                         if (turnDir.equals("")) {
-                            speakOut("Go Straight");
+                            speakOut("Go Straight for " +  Math.floor(distToNextRouteCoord) + " meters");
                         } else {
-                            speakOut("Turn " + turnDir);
+                            speakOut("Turn " + turnDir + " in " +  Math.floor(totalDistUntilTurn) + " meters");
                         }
 
                     }
@@ -358,7 +371,7 @@ public class MainActivity
 
             // making sure turnDirection has a value ( will be either right or left )
 			if(!turnDirection.equals("")) {
-				Toast.makeText(this, "turn " + turnDirection, Toast.LENGTH_LONG).show();
+				Toast.makeText(this, "turn " + turnDirection + " in " + Math.floor(totalDistUntilTurn) + " meters", Toast.LENGTH_LONG).show();
 			}
 			activeRouteCoordinates.remove(0); // remove first coord in activeRouteCoordinates[]
 		}
@@ -409,11 +422,16 @@ public class MainActivity
         if(inRoute){
             // if the current route coordinates array has entries
             if(activeRouteCoordinates.size() > 0) {
+
+                // need to rerouote if they turn around
+
+                // current distance needs to include distance to turn
+
                 String turnDir = determineNextTurn(userPosition);
                 if(turnDir.equals("")){
-                    speakOut("Go Straight");
+                    speakOut("Go Straight for " + Math.floor(distToNextRouteCoord) + " meters");
                 }else{
-                    speakOut("Turn " + turnDir);
+                    speakOut("Turn " + turnDir + " in " +  Math.floor(totalDistUntilTurn) + " meters");
                 }
             }
 
@@ -423,6 +441,38 @@ public class MainActivity
             }
         }
 	}
+
+
+    public double getDistanceInMeters(Coordinate c1, Coordinate c2){
+        double distance = 0;
+        // get difference between coordinates
+        if(c1 != null && c2 != null){
+            int x1 = c1.x,
+                    x2 = c2.x,
+                    y1 = c1.y,
+                    y2 = c2.y;
+
+            // difference between x's is greater
+            if( Math.abs(x2 - x1) > Math.abs(y2 - y1) ){
+                Log.d(LOG_TAG, "DIFF" + Math.abs(x2 - x1) + ":"+ Math.abs(y2 - y1));
+
+                distance = Math.abs(x2 - x1);
+            }
+            // difference between y's is greater
+            else{
+                distance = Math.abs(y2 - y1);
+            }
+
+            // convert to meters
+            // ideally we would want to get the scale from the API instead of hardcoding it because
+            double scale = .0004453; // meters to pixels
+
+            distance = distance * scale;
+        }
+
+        return distance;
+    }
+
 
     /**
      * get progress of building info loading ( Map and other data )
@@ -607,7 +657,7 @@ public class MainActivity
         cancel = (Button) searchDialog.findViewById(R.id.search_cancel);
 
         indoorsFragment.setViewMode(ViewMode.HIGHLIGHT_ALL_ZONES);
-        currZones = indoorsFragment.getZones(); // gets all zones
+        getAllZones();
 
         for(Zone zone : currZones){
             Log.d(LOG_TAG, "Zone Name: " + zone.getName());
@@ -698,6 +748,27 @@ public class MainActivity
 		float scale = getResources().getDisplayMetrics().density;
 		return (int) (sizeInDp*scale + 0.5f);
 	}
+
+
+	/**
+	 * Retrieves all zones registered in the map for use in the code
+	 */
+	private void getAllZones(){
+		// may not need to make currZones a class variable
+		if( currZones.size() == 0 ){
+			currZones = indoorsFragment.getZones(); // gets all zones
+		}
+
+        // populate the HashMap with the zones
+        // where the key is the zone name and the value is the zone
+        // makes finding zones easier in code
+        for(Zone zone : currZones) {
+            if(zone.getDescription() != null){
+                currZonesMap.put(zone.getDescription(), zone);
+            }
+        }
+	}
+
     /*
 	public Beacon findActiveBeacon(Beacon nearbyBeacon){
 
@@ -720,18 +791,78 @@ public class MainActivity
 		beaconManager.setRangeNotifier(new RangeNotifier() {
 			@Override
 			public void didRangeBeaconsInRegion(Collection<Beacon> beacons, Region region) {
-				Log.d(BEACON_SIG_TAG, "Beacon Array Size: " + beacons.size());
 				if (beacons.size() > 0) {
 					Beacon nearbyBeacon = beacons.iterator().next();
 					Log.i(BEACON_SIG_TAG, "The first beacon I see is about " + nearbyBeacon.getDistance() + " meters away.");
-					// What other properties do Beacons have?
-					// try to match that beacon with the beacons saved in the map
+					Log.i(BEACON_SIG_TAG, "Beacon bl add " + nearbyBeacon.getBluetoothAddress());
 
-					// once we know which beacon it is
-						// find out which beacon / coordinate is next in activeRouteCoords
-						// then call determine next turn??
 
-//					findActiveBeacon(nearbyBeacon);
+
+                    Beacon secNearestBeacon = beacons.iterator().next();
+
+                    getAllZones();
+
+                    // if there is an active route
+                    if(activeRouteCoordinates.size() > 0){
+                        Coordinate nextNearestCoord = null,
+                                nearestCoord = null,
+                                nextRouteCoord = activeRouteCoordinates.get(1);
+
+//                        String desc = nearbyBeacon.getIdentifier(1) + "-" + nearbyBeacon.getIdentifier(2);
+//                        String desc2 = secNearestBeacon.getIdentifier(1) + "-" + secNearestBeacon.getIdentifier(2);
+
+                        String desc = nearbyBeacon.getBluetoothAddress();
+                        String desc2 = secNearestBeacon.getBluetoothAddress();
+
+                        // time test
+                        long startTime = System.currentTimeMillis();
+
+                        for(Zone zone : currZones) {
+                            if(zone.getDescription() != null){
+                                if((zone.getDescription()).equals(desc)){
+                                    Log.d(LOG_TAG, "MATCH: " + zone.getDescription() + ":" + desc);
+                                    nearestBeaconDist = nearbyBeacon.getDistance();
+                                    nearestCoord = zone.getZonePoints().get(0);
+                                }
+                                // next nearest beacon
+                                if((zone.getDescription()).equals(desc2)){
+                                    Log.d(LOG_TAG, "MATCH2: " + zone.getDescription() + ":" + desc2);
+
+                                    // we know what zone its in
+                                    // is that zone in the coordinate list of routes
+                                    nextNearestCoord = zone.getZonePoints().get(0);
+                                }
+                            }
+                        }
+
+                        long stopTime = System.currentTimeMillis();
+                        long elapsedTime = stopTime - startTime;
+                        Log.d(LOG_TAG, "TIMETEST 1: " +Long.toString(elapsedTime));
+
+/*
+                        // need to change the hashmap key to be the beacon id instead and change zone description in the MMT tool to be the beacon id
+                        // time test2
+                        long startTime2 = System.currentTimeMillis();
+                        //
+                        nearestBeaconDist = nearbyBeacon.getDistance(); // distance to nearest beacon
+                        nearestCoord = ((Zone)currZonesMap.get(desc)).getZonePoints().get(0); // nearest beacon
+                        nextNearestCoord = ((Zone)currZonesMap.get(desc2)).getZonePoints().get(0); // next nearest beacon
+
+                        long stopTime2 = System.currentTimeMillis();
+                        long elapsedTime2 = stopTime2 - startTime2;
+                        Log.d(LOG_TAG, "TIMETEST 2: " + Float.toString(elapsedTime2));
+*/
+
+                        double  distFromCurrentToNextNearestBeacon = getDistanceInMeters(nextNearestCoord, nearestCoord),
+                                distFromNextNearestToNextCoord = getDistanceInMeters(nextNearestCoord, nextRouteCoord);
+
+                        distToNextRouteCoord = getDistanceInMeters(nearestCoord, nextRouteCoord);
+
+                        if(distFromCurrentToNextNearestBeacon < distFromNextNearestToNextCoord){
+                            // add to dist between current and next coord
+                            totalDistUntilTurn = distToNextRouteCoord + nearestBeaconDist;
+                        }
+                    }
 				}
 			}
 		});
@@ -746,6 +877,8 @@ public class MainActivity
 	public void buildingLoadingCanceled() {
 
 	}
+
+
 
 	/*
 	 * Handles results from speech to text listener
@@ -765,7 +898,8 @@ public class MainActivity
 			whole = whole.substring(1); //remove first space
 			Log.d(VOICE_TAG, whole);
 
-			currZones = indoorsFragment.getZones(); // gets all zones
+
+			getAllZones();
 			String retVal = "You did not say an existing location.";
 
             // loop through all zones to see if they said one of them
@@ -815,7 +949,7 @@ public class MainActivity
 	@Override
 	protected void onDestroy() {
 		super.onDestroy();
-//		beaconManager.unbind(this);
+		beaconManager.unbind(this);
 	}
 
     /**
@@ -825,7 +959,7 @@ public class MainActivity
 	protected void onStop() {
 		super.onStop();
 
-		// Don't forget to shutdown tts!
+		// shutdown tts!
 		if (tts != null) {
 			tts.stop();
 			tts.shutdown();

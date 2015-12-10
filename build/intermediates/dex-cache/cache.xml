@@ -2,6 +2,13 @@
 <items version="2" >
 
     <item
+        jar="/Users/claytonherendeen/Documents/Projects/Android/IndoorApp/app/libs/android-support-v4-r13.jar"
+        jumboMode="false"
+        revision="22.0.1"
+        sha1="bd6479f5dd592790607e0504e66e0f31c2b4d308">
+        <dex dex="/Users/claytonherendeen/Documents/Projects/Android/IndoorApp/app/build/intermediates/pre-dexed/debug/android-support-v4-r13-16893ae99a43a99811c483d521ee78ef0562b3d7.jar" />
+    </item>
+    <item
         jar="/Users/claytonherendeen/Documents/Projects/Android/IndoorApp/app/libs/indoors-library-surface.jar"
         jumboMode="false"
         revision="22.0.1"
@@ -9,18 +16,11 @@
         <dex dex="/Users/claytonherendeen/Documents/Projects/Android/IndoorApp/app/build/intermediates/pre-dexed/debug/indoors-library-surface-a8fd6c4391c313acf9c15094dc09a21abe163537.jar" />
     </item>
     <item
-        jar="/Users/claytonherendeen/Documents/Projects/Android/IndoorApp/app/build/intermediates/exploded-aar/org.altbeacon/android-beacon-library/2.7/jars/classes.jar"
+        jar="/Users/claytonherendeen/Documents/Projects/Android/IndoorApp/app/build/intermediates/exploded-aar/org.altbeacon/android-beacon-library/2.7.1/jars/classes.jar"
         jumboMode="false"
         revision="22.0.1"
-        sha1="fe158fe00409d807f9132f3b8a81c34e99ec87cd">
-        <dex dex="/Users/claytonherendeen/Documents/Projects/Android/IndoorApp/app/build/intermediates/pre-dexed/debug/classes-0c8ece9d77d02332ecc5d9ea3344e2971623fa04.jar" />
-    </item>
-    <item
-        jar="/Users/claytonherendeen/Documents/Projects/Android/IndoorApp/app/libs/android-support-v4-r13.jar"
-        jumboMode="false"
-        revision="22.0.1"
-        sha1="bd6479f5dd592790607e0504e66e0f31c2b4d308">
-        <dex dex="/Users/claytonherendeen/Documents/Projects/Android/IndoorApp/app/build/intermediates/pre-dexed/debug/android-support-v4-r13-16893ae99a43a99811c483d521ee78ef0562b3d7.jar" />
+        sha1="cf8e282e7c1cdf175467ed2b40a358a271cda953">
+        <dex dex="/Users/claytonherendeen/Documents/Projects/Android/IndoorApp/app/build/intermediates/pre-dexed/debug/classes-fe43c734e7710869bf82979c008b5739a00867df.jar" />
     </item>
 
 </items>
